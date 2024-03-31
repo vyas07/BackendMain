@@ -1,0 +1,36 @@
+{
+  "name": "userinfoservice",
+  "version": "1.0.0",
+  "description": "This is a user info service where all the relevant information regarding different user roles like admin, boutique managers or owners and customer's data is stored.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/navadeep-vedantham/UserInfoService.git"
+  },
+  "keywords": [
+    "user-management",
+    "user-information",
+    "authentication",
+    "authorization",
+    "login",
+    "registration",
+    "profile-management",
+    "user-data",
+    "account-management",
+    "security"
+  ],
+  "author": "Navadeep Vedantham",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/navadeep-vedantham/UserInfoService/issues"
+  },
+  "homepage": "https://github.com/navadeep-vedantham/UserInfoService#readme",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "express": "^4.19.2",
+    "mongoose": "^8.2.4"
+  }
+}
