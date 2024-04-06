@@ -17,27 +17,39 @@ exports.signup = async (req, res) => {
         return res.status(400).json({ message: 'Username or email is already in use' });
       }
 
-       // Generate salt
-       const saltRounds = 10;
-       const salt = await bcrypt.genSalt(saltRounds);
-
-       // Hash the password using the salt
-       const hashedPassword = await bcrypt.hash(password, salt)
-  
-      // Create a new user instance
       const newUser = new User({
         username,
         email,
-        password : hashedPassword,
+        password,
         fullName,
         dateOfBirth,
         gender});
-  
-      // Save the user to the database
-      await newUser.save();
-  
-      // Respond with success message
-      res.status(201).json({ message: 'User registered successfully' });
+        
+        try{
+            const validPassword = await newUser.validatePassword(password);  
+            if(!validPassword){
+                return res.status(200).json({ message: 'Please provide a valid password' });
+            }
+        }catch(error){
+            console.error("Password validation error:", error.message);
+            return res.status(400).json({ message: error.message });
+        }
+
+        try{
+            newUser.password = await newUser.hashedPassword(password);
+        }catch(error){
+            console.error("Password hashing error:", error.message);
+            return res.status(400).json({ message: error.message });
+        }
+
+        try{
+            await newUser.save();
+            // Respond with success message
+            res.status(201).json({ message: 'User registered successfully' });
+        }catch(error){
+            console.error("Password hashing error:", error.message);
+            return res.status(400).json({ message: error.message });
+        }
     } catch (error) {
       console.error('Error in user signup:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -50,13 +62,20 @@ exports.signup = async (req, res) => {
 //1. By email and password
 exports.getUserByRoleEmailAndPassword = async (req, res) => {
     const { email, password: userPassword } = req.body;
-
     try {
-        // Find the user by email, and password
+        // Find the user by email
         const user = await User.findOne({ email });
 
-        // If user not found or password doesn't match
-        if (!user || !(await user.comparePassword(userPassword))) {
+        // If user not found
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Compare passwords
+        const isPasswordMatch = await user.comparePassword(userPassword);
+
+        // If passwords don't match
+        if (!isPasswordMatch) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
@@ -69,6 +88,7 @@ exports.getUserByRoleEmailAndPassword = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
 // 2. By phonenumber 
 // To Do: Introduce an OTP service.
 exports.getUserByPhone = async(req, res) =>{

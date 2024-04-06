@@ -20,8 +20,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
-    validate: [validatePassword, 'Password validation failed']
+    required: true
   },
   fullName: {
     type: String,
@@ -50,13 +49,12 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 userSchema.methods.validatePassword = function validatePassword(password) {
   // Minimum length requirement
   if (password.length < 8) {
-      throw new Error("Password must be at least 8 characters long.");
+    throw new Error("Password must be at least 8 characters long.");
   }
-
   // Complexity check
   const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/;
   if (!complexityRegex.test(password)) {
-      throw new Error("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.");
+    throw new Error("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.");
   }
 
   // Avoidance of common patterns (optional)
@@ -67,8 +65,18 @@ userSchema.methods.validatePassword = function validatePassword(password) {
       'letmein', 'login', 'princess', 'qwertyuiop', 'solo', 'passw0rd'
   ];
   if (commonPatterns.includes(password.toLowerCase())) {
-      throw new Error("Password is too common.");
+    throw new Error("Password is too common.");
   }
+  return true;
+}
+
+userSchema.methods.hashedPassword = async function hashedPassword(password){
+  const saltRounds = 10;
+  const salt = await bcrypt.genSalt(saltRounds);
+
+  // Hash the password using the salt
+  const hashedPassword = await bcrypt.hash(password, salt);
+  return hashedPassword;
 }
 
 const User = mongoose.model('User', userSchema);
