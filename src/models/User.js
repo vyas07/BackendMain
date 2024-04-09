@@ -79,6 +79,14 @@ userSchema.methods.hashedPassword = async function hashedPassword(password){
   return hashedPassword;
 }
 
+userSchema.methods.arePasswordsSame = async function arePasswordsSame(newPassword, confirmPassword){
+  try {
+    return newPassword == confirmPassword;
+  } catch (err) {
+    throw new Error(err);
+  }
+}
+
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;

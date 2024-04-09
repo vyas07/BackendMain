@@ -72,10 +72,10 @@ exports.getUserByRoleEmailAndPassword = async (req, res) => {
         }
 
         // Compare passwords
-        const isPasswordMatch = await user.comparePassword(userPassword);
+        const isPasswordMatching = await user.comparePassword(userPassword);
 
         // If passwords don't match
-        if (!isPasswordMatch) {
+        if (!isPasswordMatching) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
@@ -158,3 +158,35 @@ exports.deleteUser = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+// Forgot password Implementation
+exports.forgotPassword = async (req, res) => {
+    try{
+        const { email, newPassword: newPassword, confirmPassword: confirmPassword } = req.body;
+        const user = await User.findOne({email});
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const isOldPassword = await user.comparePassword(newPassword);
+        if(isOldPassword){
+            res.json({ message: 'Please enter a password which is not the old one.' });
+        }
+
+        const arePasswordsSame = await user.arePasswordsSame(newPassword, confirmPassword);
+        if(arePasswordsSame){
+            const validPassword = await user.validatePassword(newPassword);  
+            if(!validPassword){
+                return res.status(200).json({ message: 'Please provide a valid password' });
+            }
+            user.password = await user.hashedPassword(newPassword);
+            await user.save();
+            res.json({ message: 'Password updated successfully.'});
+        }
+        else{
+            res.json({ message: 'Passwords do not match'});
+        }
+    } catch(err){
+        res.status(500).json({ message: err.message });
+    }
+}
